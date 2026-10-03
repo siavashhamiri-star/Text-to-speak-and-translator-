@@ -1,0 +1,10 @@
+{
+  "name": "Remix Side by Side Live Transcription",
+  "description": "Real-time speech transcription using Gemini Live API and microphone input",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
