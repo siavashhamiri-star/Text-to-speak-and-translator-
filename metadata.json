@@ -1,8 +1,9 @@
 {
-  "name": "Remix Side by Side Live Transcription",
-  "description": "Real-time speech transcription using Gemini Live API and microphone input",
+  "name": "Side by Side",
+  "description": "Persian ↔ English communication bridge and offline conversation practice with live voice translation",
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "camera"
   ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

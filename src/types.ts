@@ -1,64 +1,76 @@
-export type TranscriptionMode = 'verbatim' | 'smart';
+export type Language = 'fa' | 'en';
 
-export interface TranscriptSegment {
+export type SpeakerId = 'person_a' | 'person_b';
+
+export type TranslationStyleId = 'natural' | 'friendly' | 'standard' | 'very_casual' | 'casual_slang';
+
+export interface TranslationStyle {
+  id: TranslationStyleId;
+  titleEn: string;
+  titleFa: string;
+  descriptionEn: string;
+  descriptionFa: string;
+}
+
+export interface TranslationResult {
+  originalText: string;
+  translatedText: string;
+  sourceLanguage: Language;
+  targetLanguage: Language;
+  style: TranslationStyleId;
+  isOffline: boolean;
+  confidence: number;
+  timestamp: number;
+}
+
+export interface ChatMessage {
   id: string;
-  text: string;
-  timestamp: string;
-  confidence?: number;
-  isFinal: boolean;
+  speaker: SpeakerId;
+  originalText: string;
+  translatedText: string;
+  sourceLanguage: Language;
+  targetLanguage: Language;
+  style: TranslationStyleId;
+  timestamp: number;
+  isSpoken: boolean;
 }
 
-export interface SetupConfig {
-  model: string;
-  customVocabulary: string[];
-  languageCodes: string[];
+export type ConversationMode = 'side_by_side' | 'chat' | 'live_voice' | 'practice' | 'video' | 'android_artifacts';
+
+export interface VocabularyItem {
+  termEn: string;
+  meaningFa: string;
+  pronunciationEn: string;
+  exampleEn: string;
 }
 
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'recording' | 'error';
-
-export interface ServerContent {
-  interimInputTranscription?: {
-    text: string;
-  };
-  inputTranscription?: {
-    text: string;
-  };
-  interim_input_transcription?: {
-    text: string;
-  };
-  input_transcription?: {
-    text: string;
-  };
-  [key: string]: unknown;
+export interface PracticeTurn {
+  id: string;
+  promptEn: string;
+  promptFa: string;
+  expectedAnswersEn: string[];
+  explanationFa: string;
+  vocabularyNotes: VocabularyItem[];
 }
 
-export interface GeminiResponsePayload {
-  type: 'gemini_response' | 'connected' | 'disconnected' | 'error';
-  mode?: TranscriptionMode;
-  raw?: unknown;
-  serverContent?: ServerContent | null;
-  status?: string;
-  error?: string;
-  reason?: string;
+export interface PracticeScenario {
+  id: string;
+  categoryId: string;
+  categoryTitleEn: string;
+  categoryTitleFa: string;
+  iconSymbol: string;
+  titleEn: string;
+  titleFa: string;
+  descriptionEn: string;
+  descriptionFa: string;
+  turns: PracticeTurn[];
 }
 
-export interface AnalysisResult {
-  overallScore: number;
-  speakingPaceWpm: number;
-  speakingPaceFeedback: string;
-  sentenceFormation: string;
-  speakingStyle: string;
-  fillerWordsCount: number;
-  fillerWordsList: string[];
-  overallFeedback: string;
-  strengths: string[];
-  areasForImprovement: string[];
-  // Enhanced breakdown metrics
-  totalWords?: number;
-  netWords?: number;
-  durationSeconds?: number;
-  grossWpm?: number;
-  netWpm?: number;
-  fillerWordsBreakdown?: { word: string; count: number }[];
-  fillerWordsRetentionExplanation?: string;
+export interface EvaluationResult {
+  scorePercent: number;
+  feedbackEn: string;
+  feedbackFa: string;
+  isAccurate: boolean;
+  bestMatchingExpected: string;
+  matchedKeywords: string[];
 }

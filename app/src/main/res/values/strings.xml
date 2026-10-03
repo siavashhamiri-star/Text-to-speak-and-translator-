@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">Side by Side</string>
+    <string name="app_subtitle">Persian ↔ English Communication Bridge</string>
+    
+    <!-- Languages -->
+    <string name="lang_persian">Persian (فارسی)</string>
+    <string name="lang_english">English</string>
+    
+    <!-- Modes -->
+    <string name="mode_side_by_side">Side by Side</string>
+    <string name="mode_chat">Chat</string>
+    <string name="mode_live">Live Voice</string>
+    <string name="mode_practice">Practice</string>
+    <string name="mode_video">Video</string>
+
+    <!-- Speakers -->
+    <string name="speaker_person_a">Person A (Persian)</string>
+    <string name="speaker_person_b">Person B (English)</string>
+    
+    <!-- Actions -->
+    <string name="action_speak">Speak</string>
+    <string name="action_listen">Listening…</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_translate">Translate</string>
+    <string name="action_replay">Replay Audio</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_swap">Swap Sides</string>
+    
+    <!-- Accessibility -->
+    <string name="cd_mic_button">Microphone toggle for voice translation</string>
+    <string name="cd_speaker_button">Play text to speech audio</string>
+    <string name="cd_swap_button">Swap conversation languages and positions</string>
+    <string name="cd_style_selector">Select translation tone and style</string>
+    
+    <!-- Styles -->
+    <string name="style_natural">Natural (Default)</string>
+    <string name="style_friendly">Friendly</string>
+    <string name="style_standard">Standard</string>
+    <string name="style_very_casual">Very Casual</string>
+    <string name="style_casual_slang">Casual / Slang</string>
+
+    <!-- Errors and Notices -->
+    <string name="msg_offline_active">Operating in Offline-First mode</string>
+    <string name="msg_online_available">Online AI enhancement active</string>
+    <string name="msg_mic_permission_needed">Microphone permission is required for voice recognition</string>
+    <string name="msg_camera_permission_needed">Camera permission is optional for video translation mode</string>
+    <string name="msg_tts_not_ready">Text-to-speech engine initializing</string>
+</resources>

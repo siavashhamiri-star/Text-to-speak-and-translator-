@@ -18,6 +18,84 @@ async function startServer() {
     });
   });
 
+  // Persian <-> English Translation Endpoint with Style Support
+  app.post('/api/translate', async (req, res) => {
+    const { text, from, to, style } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+
+    const sourceLang = from === 'fa' ? 'Persian (فارسی)' : 'English';
+    const targetLang = to === 'fa' ? 'Persian (فارسی)' : 'English';
+
+    const styleInstructions: Record<string, string> = {
+      natural: 'Translate into natural, colloquial, everyday conversational speech as used by native speakers.',
+      friendly: 'Translate with a warm, polite, and welcoming friendly tone.',
+      standard: 'Translate using standard grammatical clarity and formal correctness.',
+      very_casual: 'Translate into informal colloquial speech as used between close peers.',
+      casual_slang: 'Translate using everyday conversational idioms, common slang, and informal expressions without offensive language.'
+    };
+
+    const instruction = styleInstructions[style] || styleInstructions.natural;
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ error: 'GEMINI_API_KEY not configured, use offline engine' });
+    }
+
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `You are an expert bilingual Persian ↔ English translator for a real-time conversation between two people.
+Source Language: ${sourceLang}
+Target Language: ${targetLang}
+Style Requirement: ${instruction}
+Original Text: "${text}"
+
+Output ONLY the translated text without commentary, quotes, or metadata. Preserve the speaker's true meaning, context, and tone.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [prompt],
+      });
+
+      const translatedText = (response.text || '').trim();
+      res.json({
+        originalText: text,
+        translatedText,
+        from,
+        to,
+        style: style || 'natural',
+        isOffline: false
+      });
+    } catch (err: any) {
+      console.error('Translation error:', err);
+      res.status(500).json({ error: 'Failed to translate online', details: err?.message });
+    }
+  });
+
+  // Android build and release status endpoint
+  app.get('/api/android/status', (req, res) => {
+    res.json({
+      appName: 'Side by Side',
+      packageName: 'com.sidebyside.translator',
+      platform: 'Native Android (Kotlin + Jetpack Compose)',
+      minSdk: 30, // Android 11 (Supports Redmi Note 8 and newer)
+      targetSdk: 35,
+      versionCode: 1,
+      versionName: '1.0.0',
+      languageScope: 'Persian ↔ English ONLY (V1)',
+      architecture: 'Offline-First with extensible ITranslationEngine',
+      modes: ['Side by Side (رو در رو)', 'Chat (چت)', 'Live Voice (صوتی زنده)', 'Language Practice (تمرین زبان)', 'Video Call (تصویری)'],
+      translationStyles: ['Natural (Default)', 'Friendly', 'Standard', 'Very Casual', 'Casual / Slang'],
+      practiceScenarios: 9,
+      gitHubActionsWorkflow: '.github/workflows/android-build.yml',
+      releaseArtifacts: {
+        apk: 'app/build/outputs/apk/release/SideBySide-release.apk',
+        aab: 'app/build/outputs/bundle/release/SideBySide-release.aab'
+      }
+    });
+  });
+
   // Analysis endpoint
   app.post('/api/analyze', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;

@@ -1,0 +1,129 @@
+name: Android CI & Release Build
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Test Android Artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant Execute Permission to Gradle Wrapper
+        run: chmod +x gradlew || true
+
+      - name: Run Unit Tests
+        run: |
+          ./gradlew testDebugUnitTest --continue --stacktrace
+
+      - name: Prepare Release Signing if Secrets Present
+        id: prepare-signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Keystore secret detected, preparing signed release build."
+            echo "$KEYSTORE_BASE64" | base64 -d > app/release.keystore
+            echo "KEYSTORE_FILE=release.keystore" >> $GITHUB_ENV
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> $GITHUB_ENV
+            echo "KEY_ALIAS=$KEY_ALIAS" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=$KEY_PASSWORD" >> $GITHUB_ENV
+            echo "signed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No signing secret provided; building unsigned release artifacts."
+            echo "signed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Release APK
+        run: |
+          ./gradlew assembleRelease --stacktrace
+
+      - name: Build Release AAB (Android App Bundle)
+        run: |
+          ./gradlew bundleRelease --stacktrace
+
+      - name: Locate and Stage Build Artifacts
+        id: stage-artifacts
+        run: |
+          mkdir -p build-artifacts/apk build-artifacts/aab
+          
+          # Find APK
+          APK_PATH=$(find app/build/outputs/apk/release/ -name "*.apk" | head -n 1)
+          if [ -n "$APK_PATH" ]; then
+            cp "$APK_PATH" build-artifacts/apk/SideBySide-release.apk
+            echo "Found APK at $APK_PATH"
+          else
+            echo "Warning: Release APK not in expected folder, checking outputs..."
+            find app/build/outputs/ -name "*.apk" || true
+          fi
+
+          # Find AAB
+          AAB_PATH=$(find app/build/outputs/bundle/release/ -name "*.aab" | head -n 1)
+          if [ -n "$AAB_PATH" ]; then
+            cp "$AAB_PATH" build-artifacts/aab/SideBySide-release.aab
+            echo "Found AAB at $AAB_PATH"
+          else
+            echo "Warning: Release AAB not in expected folder, checking outputs..."
+            find app/build/outputs/ -name "*.aab" || true
+          fi
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SideBySide-Release-APK
+          path: build-artifacts/apk/*.apk
+          if-no-files-found: warn
+
+      - name: Upload Release AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SideBySide-Release-AAB
+          path: build-artifacts/aab/*.aab
+          if-no-files-found: warn
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unit-Test-Reports
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+      - name: Create GitHub Release on Tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build-artifacts/apk/*.apk
+            build-artifacts/aab/*.aab
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
